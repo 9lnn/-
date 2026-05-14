@@ -15,11 +15,21 @@
   html {
     direction: rtl;
     -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    background-color: var(--color-neutral-bg);
+    /* Handle Notch and Bottom Bar */
+    padding-top: env(safe-area-inset-top);
   }
   
   body {
     @apply bg-neutral-bg text-premium-black antialiased overflow-x-hidden;
     font-family: var(--font-sans);
+    /* Momentum scrolling for iOS */
+    -webkit-overflow-scrolling: touch;
+    height: 100vh;
+    height: -webkit-fill-available;
   }
 }
 
@@ -37,7 +47,11 @@
   }
 
   .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 20px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 10px);
   }
 }
 

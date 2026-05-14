@@ -127,8 +127,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-bg pb-24 selection:bg-primary/20">
-      <div className="max-w-lg mx-auto px-4 pt-8">
+    <div className="min-h-screen bg-neutral-bg selection:bg-primary/20">
+      <div className="max-w-lg mx-auto px-4 safe-top pt-6 pb-40">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}

@@ -1,13 +1,7 @@
 import { motion } from 'motion/react';
 import { 
   ArrowUpRight, 
-  ArrowDownLeft, 
-  Wallet, 
-  ArrowDownRight, 
-  Plus, 
-  Activity,
-  User,
-  Bell
+  ArrowDownLeft
 } from 'lucide-react';
 import { WalletStats, Transaction } from '../types';
 import { formatCurrency, cn } from '../lib/utils';
@@ -55,12 +49,7 @@ export const Dashboard = ({ lang, name, stats, transactions, onTabChange }: Dash
             <h1 className="text-sm font-bold text-premium-black mt-1">{name}</h1>
           </div>
         </div>
-        <button 
-          onClick={() => onTabChange('profile')}
-          className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm active:scale-95 transition-transform"
-        >
-          <Bell size={20} className="text-premium-black" strokeWidth={2.5} />
-        </button>
+        <div className="w-10 h-10"></div>
       </header>
 
       {/* Main Balance Card - Bento Hero */}

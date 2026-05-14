@@ -33,7 +33,7 @@ export const HistoryPage = ({ lang, transactions, onDelete, onEdit }: HistoryPag
   }, [transactions, searchTerm, filter]);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
         <h1 className="text-[24px] font-bold tracking-tight text-premium-black uppercase">{t.historyTitle}</h1>
         <div className="bg-white p-1 rounded-2xl shadow-sm flex items-center gap-1 border border-gray-100">

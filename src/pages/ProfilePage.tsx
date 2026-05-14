@@ -29,7 +29,7 @@ export const ProfilePage = ({ onBack, onProfileUpdate, lang, onLanguageChange }:
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center gap-4">
         <button 
           onClick={onBack}
@@ -96,7 +96,7 @@ export const ProfilePage = ({ onBack, onProfileUpdate, lang, onLanguageChange }:
         </div>
       </div>
 
-      <div className="bento-card p-6 flex flex-col items-center justify-center text-center opacity-70 mb-20">
+      <div className="bento-card p-6 flex flex-col items-center justify-center text-center opacity-70">
         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[4px] mb-2 leading-none">{t.version}</p>
         <p className="text-lg font-bold text-premium-black tracking-tighter">Mahfazati v1.0.0</p>
         <p className="text-[11px] text-gray-400 mt-2 font-medium">{t.developer} | +٩٦٦٥٥٧١٤٧٤٩٢</p>

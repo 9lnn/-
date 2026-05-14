@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, Calendar, Tag, FileText, CheckCircle2, ChevronRight } from 'lucide-react';
+import { ArrowRight, Calendar, Tag, FileText, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../constants';
 import { Transaction, TransactionType } from '../types';
 import { cn } from '../lib/utils';
