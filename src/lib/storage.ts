@@ -5,7 +5,6 @@ const PROFILE_KEY = 'mahfazati_profile';
 const LANG_KEY = 'mahfazati_lang';
 
 export const storage = {
-  // ... existing ...
   getLanguage: () => {
     return (localStorage.getItem(LANG_KEY) as 'ar' | 'en') || 'ar';
   },
@@ -13,6 +12,15 @@ export const storage = {
   saveLanguage: (lang: 'ar' | 'en') => {
     localStorage.setItem(LANG_KEY, lang);
   },
+
+  isFirstVisit: () => {
+    return !localStorage.getItem('mahfazati_visited');
+  },
+
+  setVisited: () => {
+    localStorage.setItem('mahfazati_visited', 'true');
+  },
+
   getTransactions: (): Transaction[] => {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return [];

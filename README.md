@@ -1,26 +1,20 @@
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-تطبيق ويب حديث مبني باستخدام Node.js، مصمم لتوفير بيئة تطوير وتشغيل مرنة وسريعة.
+# Run and deploy your AI Studio app
 
----
+This contains everything you need to run your app locally.
 
-## ✨ المميزات
-- واجهة حديثة وسريعة
-- مبني باستخدام Node.js
-- هيكل مشروع منظم وقابل للتطوير
-- يدعم التخصيص الكامل
-- جاهز للنشر على مختلف المنصات
+View your app in AI Studio: https://ai.studio/apps/ba36dcd3-0e46-4390-879e-69b0ae70348a
 
----
+## Run Locally
 
-## 📦 التشغيل محليًا
+**Prerequisites:**  Node.js
 
-### المتطلبات
-- Node.js
 
----
-
-### خطوات التشغيل
-
-1. تثبيت الحزم:
-```bash
-npm install
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

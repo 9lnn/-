@@ -36,9 +36,9 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
-    const existing = storage.getTransactions();
-    if (existing.length === 0) {
-      // Add demo data for a better first impression
+    
+    if (storage.isFirstVisit()) {
+      // Add demo data for a better first impression only on first visit
       const demo: Transaction[] = [
         {
           id: 'demo1',
@@ -60,6 +60,7 @@ export default function App() {
         }
       ];
       demo.forEach(t => storage.saveTransaction(t));
+      storage.setVisited();
     }
     refreshData();
   }, []);
