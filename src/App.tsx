@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BottomNav } from './components/BottomNav';
@@ -10,7 +5,9 @@ import { Dashboard } from './pages/Dashboard';
 import { TransactionForm } from './pages/TransactionForm';
 import { HistoryPage } from './pages/HistoryPage';
 import { ProfilePage } from './pages/ProfilePage';
-import { Transaction, WalletStats } from './types';
+import { DebtPage } from './pages/DebtPage';
+import { DebtForm } from './pages/DebtForm';
+import { Transaction, WalletStats, Debt, DebtStats } from './types';
 import { storage } from './lib/storage';
 
 export default function App() {
@@ -18,12 +15,20 @@ export default function App() {
   const [userName, setUserName] = useState(storage.getProfile().name);
   const [lang, setLang] = useState<'ar' | 'en'>(storage.getLanguage());
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [debts, setDebts] = useState<Debt[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
   const [stats, setStats] = useState<WalletStats>({
     balance: 0,
     totalIncome: 0,
     totalExpense: 0,
+    totalDebt: 0,
     transactionCount: 0,
+  });
+  const [debtStats, setDebtStats] = useState<DebtStats>({
+    total: 0,
+    paid: 0,
+    remaining: 0
   });
 
   const handleLanguageChange = (newLang: 'ar' | 'en') => {
@@ -37,6 +42,9 @@ export default function App() {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
     
+    // Initial sync
+    refreshData();
+
     if (storage.isFirstVisit()) {
       // Add demo data for a better first impression only on first visit
       const demo: Transaction[] = [
@@ -45,29 +53,31 @@ export default function App() {
           amount: 5000,
           type: 'income',
           category: 'salary',
-          description: 'راتب شهر مايو',
+          description: 'رصيد افتتاحي',
           date: new Date().toISOString().split('T')[0],
           createdAt: Date.now() - 10000,
-        },
-        {
-          id: 'demo2',
-          amount: 150,
-          type: 'expense',
-          category: 'coffee',
-          description: 'قهوة الصباح',
-          date: new Date().toISOString().split('T')[0],
-          createdAt: Date.now() - 5000,
         }
       ];
       demo.forEach(t => storage.saveTransaction(t));
       storage.setVisited();
+      refreshData();
     }
-    refreshData();
+
+    // Sync across tabs/instances
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.startsWith('mahfazati_')) {
+        refreshData();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const refreshData = () => {
     setTransactions(storage.getTransactions());
+    setDebts(storage.getDebts());
     setStats(storage.getStats());
+    setDebtStats(storage.getDebtStats());
   };
 
   const handleAddTransaction = (data: Omit<Transaction, 'id' | 'createdAt'>) => {
@@ -86,6 +96,46 @@ export default function App() {
     setActiveTab('dashboard');
   };
 
+  const handleDebtSubmit = (data: any) => {
+    if (activeTab === 'repay-debt') {
+      storage.savePayment({
+        id: Math.random().toString(36).substr(2, 9),
+        debtId: data.debtId,
+        amount: data.amount,
+        date: data.date,
+        createdAt: Date.now()
+      });
+    } else if (editingDebt) {
+      const updatedDebt = {
+        ...editingDebt,
+        ...data,
+        remainingAmount: data.totalAmount - editingDebt.paidAmount,
+      };
+      if (updatedDebt.remainingAmount <= 0) {
+        updatedDebt.status = 'paid';
+        updatedDebt.remainingAmount = 0;
+      } else if (updatedDebt.paidAmount > 0) {
+        updatedDebt.status = 'partially_paid';
+      } else {
+        updatedDebt.status = 'unpaid';
+      }
+      storage.updateDebt(editingDebt.id, updatedDebt);
+      setEditingDebt(null);
+    } else {
+      const newDebt: Debt = {
+        ...data,
+        id: Math.random().toString(36).substr(2, 9),
+        paidAmount: 0,
+        remainingAmount: data.totalAmount,
+        status: 'unpaid',
+        createdAt: Date.now(),
+      };
+      storage.saveDebt(newDebt);
+    }
+    refreshData();
+    setActiveTab('debts');
+  };
+
   const handleDeleteTransaction = (id: string) => {
     storage.deleteTransaction(id);
     refreshData();
@@ -96,10 +146,28 @@ export default function App() {
     setActiveTab('edit-transaction');
   };
 
+  const handleEditDebt = (debt: Debt) => {
+    setEditingDebt(debt);
+    setActiveTab('edit-debt');
+  };
+
+  const handleDeleteDebt = (id: string) => {
+    storage.deleteDebt(id);
+    refreshData();
+  };
+
+  const handleRepayDebt = (id: string) => {
+    const debt = debts.find(d => d.id === id);
+    if (debt) {
+      setEditingDebt(debt);
+      setActiveTab('repay-debt');
+    }
+  };
+
   const renderPage = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard lang={lang} name={userName} stats={stats} transactions={transactions.slice(0, 5)} onTabChange={setActiveTab} />;
+        return <Dashboard lang={lang} name={userName} stats={stats} debtStats={debtStats} transactions={transactions.slice(0, 5)} onTabChange={setActiveTab} />;
       case 'add-income':
         return <TransactionForm lang={lang} type="income" onSubmit={handleAddTransaction} onBack={() => setActiveTab('dashboard')} />;
       case 'add-expense':
@@ -119,10 +187,18 @@ export default function App() {
         ) : null;
       case 'history':
         return <HistoryPage lang={lang} transactions={transactions} onDelete={handleDeleteTransaction} onEdit={handleEditTransaction} />;
+      case 'debts':
+        return <DebtPage lang={lang} debts={debts} onDelete={handleDeleteDebt} onEdit={handleEditDebt} onAdd={() => setActiveTab('add-debt')} onRepay={handleRepayDebt} />;
+      case 'add-debt':
+        return <DebtForm lang={lang} mode="add" onSubmit={handleDebtSubmit} onBack={() => setActiveTab('debts')} />;
+      case 'edit-debt':
+        return editingDebt ? <DebtForm lang={lang} mode="edit" initialDebt={editingDebt} onSubmit={handleDebtSubmit} onBack={() => { setEditingDebt(null); setActiveTab('debts'); }} /> : null;
+      case 'repay-debt':
+        return editingDebt ? <DebtForm lang={lang} mode="repay" initialDebt={editingDebt} onSubmit={handleDebtSubmit} onBack={() => { setEditingDebt(null); setActiveTab('debts'); }} /> : null;
       case 'profile':
         return <ProfilePage lang={lang} onLanguageChange={handleLanguageChange} onBack={() => setActiveTab('dashboard')} onProfileUpdate={setUserName} />;
       default:
-        return <Dashboard lang={lang} name={userName} stats={stats} transactions={transactions.slice(0, 5)} onTabChange={setActiveTab} />;
+        return <Dashboard lang={lang} name={userName} stats={stats} debtStats={debtStats} transactions={transactions.slice(0, 5)} onTabChange={setActiveTab} />;
     }
   };
 

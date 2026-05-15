@@ -1,23 +1,27 @@
 import { motion } from 'motion/react';
 import { 
   ArrowUpRight, 
-  ArrowDownLeft
+  ArrowDownLeft,
+  Loader2,
+  TrendingUp,
+  AlertCircle
 } from 'lucide-react';
-import { WalletStats, Transaction } from '../types';
+import { WalletStats, Transaction, DebtStats } from '../types';
 import { formatCurrency, cn } from '../lib/utils';
 import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../constants';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { translations, Language } from '../translations';
 
 interface DashboardProps {
   lang: Language;
   name: string;
   stats: WalletStats;
+  debtStats: DebtStats;
   transactions: Transaction[];
   onTabChange: (tab: string) => void;
 }
 
-export const Dashboard = ({ lang, name, stats, transactions, onTabChange }: DashboardProps) => {
+export const Dashboard = ({ lang, name, stats, debtStats, transactions, onTabChange }: DashboardProps) => {
   const t = translations[lang];
   
   // Calculate category data for expenses
@@ -52,20 +56,29 @@ export const Dashboard = ({ lang, name, stats, transactions, onTabChange }: Dash
         <div className="w-10 h-10"></div>
       </header>
 
-      {/* Main Balance Card - Bento Hero */}
+      {/* Main Balance & Debt Card - Bento Hero */}
       <motion.div 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="w-full bg-primary rounded-[32px] p-6 text-white shadow-2xl shadow-primary/30 relative overflow-hidden"
+        className="w-full bg-primary rounded-[32px] text-white shadow-2xl shadow-primary/30 relative overflow-hidden"
       >
-        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="relative z-10">
-          <div className="flex justify-between items-start mb-6">
-            <p className="text-sm text-white/80 font-medium">{t.currentBalance}</p>
+        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="relative z-10 flex divide-x divide-white/20 rtl:divide-x-reverse h-32">
+          {/* Balance Section */}
+          <div className="flex-1 p-6 flex flex-col justify-center">
+            <p className="text-[11px] text-white/70 font-bold uppercase tracking-widest mb-1">{t.currentBalance}</p>
+            <h2 className="text-xl font-bold tracking-tight">
+              {formatCurrency(stats.balance).split(' ')[0]} <span className="text-xs font-normal opacity-70">SAR</span>
+            </h2>
           </div>
-          <h2 className="text-3xl font-bold tracking-tight mb-2">
-            {formatCurrency(stats.balance).split(' ')[0]} <span className="text-lg font-normal opacity-70">SAR</span>
-          </h2>
+          
+          {/* Debt Section */}
+          <div className="flex-1 p-6 flex flex-col justify-center bg-white/5">
+            <p className="text-[11px] text-white/70 font-bold uppercase tracking-widest mb-1">{t.totalDebts}</p>
+            <h2 className="text-xl font-bold tracking-tight text-red-200">
+              {formatCurrency(stats.totalDebt).split(' ')[0]} <span className="text-xs font-normal opacity-70">SAR</span>
+            </h2>
+          </div>
         </div>
       </motion.div>
 
@@ -87,49 +100,87 @@ export const Dashboard = ({ lang, name, stats, transactions, onTabChange }: Dash
         </div>
       </div>
 
-      {/* Expense Analysis Chart */}
-      {expenseData.length > 0 && (
-        <div className="bento-card p-5">
-          <h3 className="text-sm font-bold text-premium-black mb-4 uppercase tracking-tight">{t.analysis}</h3>
-          <div className="h-[180px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={expenseData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {expenseData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: 'none', 
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                    fontSize: '12px',
-                    fontWeight: 'bold'
-                  }} 
-                />
-              </PieChart>
-            </ResponsiveContainer>
+      {/* Analysis Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Expense Analysis Chart */}
+        {expenseData.length > 0 && (
+          <div className="bento-card p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="text-primary" size={16} />
+              <h3 className="text-sm font-bold text-premium-black uppercase tracking-tight">{t.analysis}</h3>
+            </div>
+            <div className="h-[180px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={expenseData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {expenseData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      borderRadius: '16px', 
+                      border: 'none', 
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }} 
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex flex-wrap justify-center gap-4 mt-2">
+              {expenseData.map((entry, index) => (
+                <div key={index} className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                  <span className="text-[10px] font-bold text-gray-500">{entry.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap justify-center gap-4 mt-2">
-            {expenseData.map((entry, index) => (
-              <div key={index} className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                <span className="text-[10px] font-bold text-gray-500">{entry.name}</span>
+        )}
+
+        {/* Debt Analysis Section */}
+        <div className="bento-card p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertCircle className="text-red-500" size={16} />
+            <h3 className="text-sm font-bold text-premium-black uppercase tracking-tight">{t.debtAnalysis}</h3>
+          </div>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-gray-500">{t.paid}</span>
+              <span className="text-xs font-bold text-primary">{Math.round((debtStats.paid / (debtStats.total || 1)) * 100)}%</span>
+            </div>
+            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${(debtStats.paid / (debtStats.total || 1)) * 100}%` }}
+                className="h-full bg-primary"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="bg-neutral-bg p-3 rounded-2xl">
+                 <p className="text-[10px] text-gray-400 font-bold mb-1">{t.paid}</p>
+                 <p className="text-xs font-bold text-primary">{formatCurrency(debtStats.paid)}</p>
               </div>
-            ))}
+              <div className="bg-neutral-bg p-3 rounded-2xl">
+                 <p className="text-[10px] text-gray-400 font-bold mb-1">{t.remaining}</p>
+                 <p className="text-xs font-bold text-red-500">{formatCurrency(debtStats.remaining)}</p>
+              </div>
+            </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Recent Transactions List */}
       <div>

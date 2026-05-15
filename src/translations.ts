@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 export type Language = 'ar' | 'en';
 
 export const translations = {
@@ -51,6 +46,28 @@ export const translations = {
     version: 'الإصدار',
     developer: 'المطور محمد النهدي',
     analysis: 'تحليل المصاريف',
+    debts: 'الديون',
+    totalDebts: 'إجمالي الديون',
+    addDebt: 'إضافة دين جديد',
+    editDebt: 'تعديل الدين',
+    debtName: 'اسم الشخص أو الجهة',
+    debtAmount: 'مبلغ الدين',
+    debtDescription: 'وصف الدين (اختياري)',
+    debtDate: 'تاريخ الدين',
+    debtStatus: 'حالة الدين',
+    remaining: 'المتبقي',
+    paid: 'المسدد',
+    unpaid: 'غير مسدد',
+    partiallyPaid: 'مسدد جزئياً',
+    paidFull: 'مسدد بالكامل',
+    noDebts: 'لا توجد ديون مسجلة',
+    debtHistory: 'سجل الديون',
+    searchDebt: 'ابحث عن اسم، مبلغ، أو وصف...',
+    repay: 'سداد',
+    repayTitle: 'تسجيل دفعة سداد',
+    repayAmount: 'مبلغ السداد',
+    repaySuccess: 'تم تسجيل السداد بنجاح',
+    debtAnalysis: 'تحليل الديون',
   },
   en: {
     appName: 'Mahfazati',
@@ -97,5 +114,27 @@ export const translations = {
     version: 'Version',
     developer: 'Dev: Mohammed Alnahdi',
     analysis: 'Expense Analysis',
+    debts: 'Debts',
+    totalDebts: 'Total Debts',
+    addDebt: 'Add New Debt',
+    editDebt: 'Edit Debt',
+    debtName: 'Name / Entity',
+    debtAmount: 'Debt Amount',
+    debtDescription: 'Description (Optional)',
+    debtDate: 'Debt Date',
+    debtStatus: 'Status',
+    remaining: 'Remaining',
+    paid: 'Paid',
+    unpaid: 'Unpaid',
+    partiallyPaid: 'Partially Paid',
+    paidFull: 'Paid in Full',
+    noDebts: 'No debts recorded',
+    debtHistory: 'Debt History',
+    searchDebt: 'Search debts...',
+    repay: 'Repay',
+    repayTitle: 'Record Payment',
+    repayAmount: 'Payment Amount',
+    repaySuccess: 'Payment recorded successfully',
+    debtAnalysis: 'Debt Analysis',
   }
 };
