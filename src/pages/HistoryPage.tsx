@@ -21,8 +21,25 @@ export const HistoryPage = ({ lang, transactions, onDelete, onEdit }: HistoryPag
   const t = translations[lang];
 
   const filteredTransactions = useMemo(() => {
+    const searchLower = searchTerm.toLowerCase().trim();
+    
     return transactions
       .filter((trans) => {
+        // 1. Filter Logic
+        let passesFilter = false;
+        if (filter === 'all') {
+          passesFilter = true;
+        } else if (filter === 'income') {
+          passesFilter = trans.type === 'income';
+        } else if (filter === 'expense') {
+          passesFilter = trans.type === 'expense';
+        }
+
+        if (!passesFilter) return false;
+
+        // 2. Search Logic
+        if (!searchLower) return true;
+
         let categoryLabel = '';
         if (trans.unifiedType === 'debt') {
           categoryLabel = trans.description || '';
@@ -31,14 +48,11 @@ export const HistoryPage = ({ lang, transactions, onDelete, onEdit }: HistoryPag
             .find(c => c.id === trans.category)?.label || '';
         }
         
-        const matchesSearch = categoryLabel.includes(searchTerm) || (trans.description || '').includes(searchTerm);
-        
-        let matchesFilter = false;
-        if (filter === 'all') matchesFilter = true;
-        else if (filter === 'income') matchesFilter = trans.type === 'income' && trans.unifiedType === 'transaction';
-        else if (filter === 'expense') matchesFilter = trans.type === 'expense' && trans.unifiedType === 'transaction';
-
-        return matchesSearch && matchesFilter;
+        return (
+          categoryLabel.toLowerCase().includes(searchLower) || 
+          (trans.description || '').toLowerCase().includes(searchLower) ||
+          trans.amount.toString().includes(searchLower)
+        );
       })
       .sort((a, b) => b.createdAt - a.createdAt);
   }, [transactions, searchTerm, filter]);

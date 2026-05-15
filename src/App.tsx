@@ -47,7 +47,10 @@ export default function App() {
         debtStatus: d.status
       }))
     ];
-    return combined.sort((a, b) => b.createdAt - a.createdAt);
+
+    // Deduplicate by ID and sort
+    const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+    return unique.sort((a, b) => b.createdAt - a.createdAt);
   };
 
   const handleLanguageChange = (newLang: 'ar' | 'en') => {

@@ -145,7 +145,7 @@ export const storage = {
           status: newStatus
         });
 
-        // Record as income if it was a debt to me
+        // Record as income if it was a debt to me, or expense if it was money I owed
         if (debt.type === 'to_me') {
           storage.saveTransaction({
             id: `repay_${payment.id}`,
@@ -153,6 +153,16 @@ export const storage = {
             type: 'income',
             category: 'debt_repayment',
             description: `سداد دين: ${debt.name}`,
+            date: payment.date,
+            createdAt: payment.createdAt
+          });
+        } else if (debt.type === 'owe') {
+          storage.saveTransaction({
+            id: `repay_${payment.id}`,
+            amount: payment.amount,
+            type: 'expense',
+            category: 'other_expense',
+            description: `سدادي لدين: ${debt.name}`,
             date: payment.date,
             createdAt: payment.createdAt
           });
