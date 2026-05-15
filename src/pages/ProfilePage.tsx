@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { User, LogOut, ChevronLeft, Save, Globe, Shield, CreditCard, ChevronRight } from 'lucide-react';
+import { User, LogOut, ChevronLeft, Save, Globe, Shield, CreditCard, ChevronRight, MessageCircle } from 'lucide-react';
 import { storage } from '../lib/storage';
 import { cn } from '../lib/utils';
 
@@ -96,10 +96,21 @@ export const ProfilePage = ({ onBack, onProfileUpdate, lang, onLanguageChange }:
         </div>
       </div>
 
-      <div className="bento-card p-6 flex flex-col items-center justify-center text-center opacity-70">
+      <div className="bento-card p-6 flex flex-col items-center justify-center text-center opacity-80 hover:opacity-100 transition-opacity">
         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[4px] mb-2 leading-none">{t.version}</p>
         <p className="text-lg font-bold text-premium-black tracking-tighter">Mahfazati v1.0.0</p>
-        <p className="text-[11px] text-gray-400 mt-2 font-medium">{t.developer} | +٩٦٦٥٥٧١٤٧٤٩٢</p>
+        <div className="flex flex-col items-center gap-3 mt-4">
+          <p className="text-[11px] text-gray-400 font-medium">malnhdi99@gmail.com</p>
+          <a 
+            href="https://wa.me/966557147492" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-10 h-10 rounded-2xl bg-[#25D366] text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 active:scale-95 transition-all hover:brightness-110"
+          >
+            <MessageCircle size={20} fill="white" className="text-white" />
+          </a>
+          <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{t.developer}</p>
+        </div>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ export interface Transaction {
 }
 
 export type DebtStatus = 'unpaid' | 'partially_paid' | 'paid';
+export type DebtType = 'owe' | 'to_me';
 
 export interface Debt {
   id: string;
@@ -21,6 +22,7 @@ export interface Debt {
   description?: string;
   date: string;
   status: DebtStatus;
+  type: DebtType;
   createdAt: number;
 }
 
@@ -36,12 +38,33 @@ export interface WalletStats {
   balance: number;
   totalIncome: number;
   totalExpense: number;
-  totalDebt: number;
+  totalDebtOwe: number;
+  totalDebtToMe: number;
   transactionCount: number;
 }
 
 export interface DebtStats {
-  total: number;
-  paid: number;
-  remaining: number;
+  owe: {
+    total: number;
+    paid: number;
+    remaining: number;
+  };
+  toMe: {
+    total: number;
+    paid: number;
+    remaining: number;
+  };
+}
+
+export interface UnifiedItem {
+  id: string;
+  amount: number;
+  type: TransactionType;
+  category: string;
+  description?: string;
+  date: string;
+  createdAt: number;
+  unifiedType: 'transaction' | 'debt';
+  debtType?: DebtType;
+  debtStatus?: DebtStatus;
 }

@@ -144,6 +144,19 @@ export const storage = {
           remainingAmount: newRemaining,
           status: newStatus
         });
+
+        // Record as income if it was a debt to me
+        if (debt.type === 'to_me') {
+          storage.saveTransaction({
+            id: `repay_${payment.id}`,
+            amount: payment.amount,
+            type: 'income',
+            category: 'debt_repayment',
+            description: `سداد دين: ${debt.name}`,
+            date: payment.date,
+            createdAt: payment.createdAt
+          });
+        }
       }
     } catch (e) {
       console.error('Error saving payment to localStorage', e);
@@ -161,24 +174,40 @@ export const storage = {
     });
 
     const debts = storage.getDebts();
-    const totalDebtRemaining = debts.reduce((acc, current) => acc + current.remainingAmount, 0);
+    const totalDebtOwe = debts
+      .filter(d => d.type === 'owe')
+      .reduce((acc, current) => acc + current.remainingAmount, 0);
+    const totalDebtToMe = debts
+      .filter(d => d.type === 'to_me')
+      .reduce((acc, current) => acc + current.remainingAmount, 0);
 
     return {
       balance: totalIncome - totalExpense,
       totalIncome,
       totalExpense,
-      totalDebt: totalDebtRemaining,
+      totalDebtOwe,
+      totalDebtToMe,
       transactionCount: transactions.length,
     };
   },
 
   getDebtStats: (): DebtStats => {
     const debts = storage.getDebts();
-    return debts.reduce((acc, current) => ({
-      total: acc.total + current.totalAmount,
-      paid: acc.paid + current.paidAmount,
-      remaining: acc.remaining + current.remainingAmount,
-    }), { total: 0, paid: 0, remaining: 0 });
+    return debts.reduce((acc, current) => {
+      if (current.type === 'owe') {
+        acc.owe.total += current.totalAmount;
+        acc.owe.paid += current.paidAmount;
+        acc.owe.remaining += current.remainingAmount;
+      } else {
+        acc.toMe.total += current.totalAmount;
+        acc.toMe.paid += current.paidAmount;
+        acc.toMe.remaining += current.remainingAmount;
+      }
+      return acc;
+    }, { 
+      owe: { total: 0, paid: 0, remaining: 0 }, 
+      toMe: { total: 0, paid: 0, remaining: 0 } 
+    });
   },
 
   getProfile: () => {

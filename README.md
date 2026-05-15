@@ -1,20 +1,81 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# محفظتي | Mahfazati
 
-# Run and deploy your AI Studio app
+تطبيق محفظة مالية شخصية حديثة بتصميم فاخر وعصري لتتبع الرصيد والمصاريف والديون.
 
-This contains everything you need to run your app locally.
+## المميزات
 
-View your app in AI Studio: https://ai.studio/apps/ba36dcd3-0e46-4390-879e-69b0ae70348a
+- **إدارة المداخيل والمصاريف**: تتبع كافة العمليات المالية بسهولة.
+- **إدارة الديون**: قسم متكامل للديون (التي عليك والتي لك) مع إمكانية السداد الجزئي أو الكلي.
+- **إحصائيات ذكية**: رسوم بيانية وتحليلات دقيقة لتوزيع المصاريف وحالة الديون.
+- **تحديث فوري**: ربط تلقائي بين سداد الديون والمداخيل وتحديث الرصيد اللحظي.
+- **دعم اللغتين**: واجهة كاملة باللغتين العربية والإنجليزية.
+- **خصوصية البيانات**: يتم تخزين كافة البيانات محلياً على جهازك (LocalStorage) لضمان الخصوصية التامة.
+- **تصميم عصري**: واجهة مستخدم مريحة للعين، متجاوبة مع كافة الشاشات، ومحسنة للهواتف الذكية.
 
-## Run Locally
+## التقنيات المستخدمة
 
-**Prerequisites:**  Node.js
+- **React 19**: لبناء واجهة المستخدم.
+- **TypeScript**: لضمان استقرار الكود.
+- **Tailwind CSS**: للتصميم العصري والمرن.
+- **Motion**: للتحريكات السلسة.
+- **Recharts**: لعرض الإحصائيات والرسوم البيانية.
+- **Lucide React**: للأيقونات.
 
+## التشغيل المحلي
+
+1. تثبيت الاعتمادات:
+   ```bash
+   npm install
+   ```
+
+2. تشغيل التطبيق في وضع التطوير:
+   ```bash
+   npm run dev
+   ```
+
+3. بناء التطبيق للإنتاج:
+   ```bash
+   npm run build
+   ```
+
+---
+
+# Mahfazati | Personal Wallet
+
+A modern personal finance application with a premium design to track balance, expenses, and debts.
+
+## Features
+
+- **Income & Expense Management**: Track all financial transactions easily.
+- **Debt Management**: Integrated section for debts (owed vs lending) with partial or full repayment support.
+- **Smart Statistics**: Precise charts and analytics for expense distribution and debt status.
+- **Instant Sync**: Automatic linking between debt repayments, income, and real-time balance updates.
+- **Bilingual Support**: Fully localized in Arabic and English.
+- **Data Privacy**: All data is stored locally on your device (LocalStorage) to ensure total privacy.
+- **Modern UI**: Eye-pleasing interface, fully responsive, and optimized for smartphones.
+
+## Tech Stack
+
+- **React 19**
+- **TypeScript**
+- **Tailwind CSS**
+- **Motion**
+- **Recharts**
+- **Lucide React**
+
+## Getting Started
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+
+2. Run in development mode:
+   ```bash
+   npm run dev
+   ```
+
+3. Build for production:
+   ```bash
+   npm run build
+   ```

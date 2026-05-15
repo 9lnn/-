@@ -6,7 +6,7 @@ import {
   TrendingUp,
   AlertCircle
 } from 'lucide-react';
-import { WalletStats, Transaction, DebtStats } from '../types';
+import { WalletStats, UnifiedItem, DebtStats } from '../types';
 import { formatCurrency, cn } from '../lib/utils';
 import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../constants';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts';
@@ -17,16 +17,16 @@ interface DashboardProps {
   name: string;
   stats: WalletStats;
   debtStats: DebtStats;
-  transactions: Transaction[];
+  transactions: UnifiedItem[];
   onTabChange: (tab: string) => void;
 }
 
 export const Dashboard = ({ lang, name, stats, debtStats, transactions, onTabChange }: DashboardProps) => {
   const t = translations[lang];
   
-  // Calculate category data for expenses
+  // Calculate category data for expenses (only for real transactions)
   const expenseData = transactions
-    .filter(trans => trans.type === 'expense')
+    .filter(trans => trans.type === 'expense' && trans.unifiedType === 'transaction')
     .reduce((acc: any[], current) => {
       const categoryLabel = EXPENSE_CATEGORIES.find(c => c.id === current.category)?.label || t.all;
       const existing = acc.find(item => item.name === categoryLabel);
@@ -52,32 +52,44 @@ export const Dashboard = ({ lang, name, stats, debtStats, transactions, onTabCha
             <p className="text-[11px] text-gray-400 font-medium leading-none">{t.welcome}</p>
             <h1 className="text-sm font-bold text-premium-black mt-1">{name}</h1>
           </div>
-        </div>
+         </div>
         <div className="w-10 h-10"></div>
       </header>
 
-      {/* Main Balance & Debt Card - Bento Hero */}
+      {/* Main Balance Card - Independent */}
       <motion.div 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="w-full bg-primary rounded-[32px] text-white shadow-2xl shadow-primary/30 relative overflow-hidden"
+        className="w-full bg-primary rounded-[32px] text-white shadow-2xl shadow-primary/30 relative overflow-hidden p-8"
       >
         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
-        <div className="relative z-10 flex divide-x divide-white/20 rtl:divide-x-reverse h-32">
-          {/* Balance Section */}
-          <div className="flex-1 p-6 flex flex-col justify-center">
-            <p className="text-[11px] text-white/70 font-bold uppercase tracking-widest mb-1">{t.currentBalance}</p>
-            <h2 className="text-xl font-bold tracking-tight">
-              {formatCurrency(stats.balance).split(' ')[0]} <span className="text-xs font-normal opacity-70">SAR</span>
-            </h2>
+        <div className="relative z-10">
+          <p className="text-[11px] text-white/70 font-bold uppercase tracking-widest mb-2">{t.currentBalance}</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {formatCurrency(stats.balance).split(' ')[0]} <span className="text-sm font-normal opacity-70">SAR</span>
+          </h2>
+        </div>
+      </motion.div>
+
+      {/* Debts Summary Card - Split Sections */}
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="bento-card overflow-hidden"
+      >
+        <div className="flex divide-x divide-gray-100 rtl:divide-x-reverse h-24">
+          <div className="flex-1 p-4 flex flex-col justify-center">
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{t.totalDebtOwe}</p>
+            <p className="text-lg font-bold text-red-500">
+              {formatCurrency(stats.totalDebtOwe)}
+            </p>
           </div>
-          
-          {/* Debt Section */}
-          <div className="flex-1 p-6 flex flex-col justify-center bg-white/5">
-            <p className="text-[11px] text-white/70 font-bold uppercase tracking-widest mb-1">{t.totalDebts}</p>
-            <h2 className="text-xl font-bold tracking-tight text-red-200">
-              {formatCurrency(stats.totalDebt).split(' ')[0]} <span className="text-xs font-normal opacity-70">SAR</span>
-            </h2>
+          <div className="flex-1 p-4 flex flex-col justify-center">
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{t.totalDebtToMe}</p>
+            <p className="text-lg font-bold text-emerald-500">
+              {formatCurrency(stats.totalDebtToMe)}
+            </p>
           </div>
         </div>
       </motion.div>
@@ -156,26 +168,43 @@ export const Dashboard = ({ lang, name, stats, debtStats, transactions, onTabCha
             <h3 className="text-sm font-bold text-premium-black uppercase tracking-tight">{t.debtAnalysis}</h3>
           </div>
           <div className="space-y-4 py-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-500">{t.paid}</span>
-              <span className="text-xs font-bold text-primary">{Math.round((debtStats.paid / (debtStats.total || 1)) * 100)}%</span>
-            </div>
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${(debtStats.paid / (debtStats.total || 1)) * 100}%` }}
-                className="h-full bg-primary"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="bg-neutral-bg p-3 rounded-2xl">
-                 <p className="text-[10px] text-gray-400 font-bold mb-1">{t.paid}</p>
-                 <p className="text-xs font-bold text-primary">{formatCurrency(debtStats.paid)}</p>
+            {/* Owe Progress */}
+            <div className="p-3 bg-red-50/50 rounded-2xl">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-red-600 uppercase">{t.debtOwe}</span>
+                <span className="text-[10px] font-bold text-red-600">
+                  {Math.round((debtStats.owe.paid / (debtStats.owe.total || 1)) * 100)}%
+                </span>
               </div>
-              <div className="bg-neutral-bg p-3 rounded-2xl">
-                 <p className="text-[10px] text-gray-400 font-bold mb-1">{t.remaining}</p>
-                 <p className="text-xs font-bold text-red-500">{formatCurrency(debtStats.remaining)}</p>
+              <div className="w-full h-1.5 bg-red-100 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(debtStats.owe.paid / (debtStats.owe.total || 1)) * 100}%` }}
+                  className="h-full bg-red-500"
+                />
+              </div>
+              <div className="flex justify-between mt-2">
+                <span className="text-[10px] text-gray-400">{t.remaining}: {formatCurrency(debtStats.owe.remaining)}</span>
+              </div>
+            </div>
+
+            {/* To Me Progress */}
+            <div className="p-3 bg-emerald-50/50 rounded-2xl">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-emerald-600 uppercase">{t.debtToMe}</span>
+                <span className="text-[10px] font-bold text-emerald-600">
+                  {Math.round((debtStats.toMe.paid / (debtStats.toMe.total || 1)) * 100)}%
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-emerald-100 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(debtStats.toMe.paid / (debtStats.toMe.total || 1)) * 100}%` }}
+                  className="h-full bg-emerald-500"
+                />
+              </div>
+              <div className="flex justify-between mt-2">
+                <span className="text-[10px] text-gray-400">{t.remaining}: {formatCurrency(debtStats.toMe.remaining)}</span>
               </div>
             </div>
           </div>
@@ -210,22 +239,26 @@ export const Dashboard = ({ lang, name, stats, debtStats, transactions, onTabCha
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shadow-sm text-lg">
-                    {trans.type === 'income' ? '💰' : '🛒'}
+                    {trans.unifiedType === 'debt' ? '🧾' : (trans.type === 'income' ? '💰' : '💸')}
                   </div>
                   <div>
                     <p className="text-xs font-bold text-premium-black">
-                      {trans.type === 'income' 
-                        ? (INCOME_CATEGORIES.find(c => c.id === trans.category)?.label || trans.category)
-                        : (EXPENSE_CATEGORIES.find(c => c.id === trans.category)?.label || trans.category)}
+                      {trans.unifiedType === 'debt' 
+                        ? trans.description
+                        : (trans.type === 'income' 
+                            ? (INCOME_CATEGORIES.find(c => c.id === trans.category)?.label || trans.category)
+                            : (EXPENSE_CATEGORIES.find(c => c.id === trans.category)?.label || trans.category))}
                     </p>
-                    <p className="text-[10px] text-gray-400 font-medium">{trans.date}</p>
+                    <p className="text-[10px] text-gray-400 font-medium">
+                      {trans.date} {trans.unifiedType === 'debt' && <span className="opacity-50">· {trans.debtType === 'owe' ? t.debtOwe : t.debtToMe}</span>}
+                    </p>
                   </div>
                 </div>
                 <p className={cn(
                   "text-xs font-bold",
                   trans.type === 'income' ? "text-primary" : "text-red-500"
                 )}>
-                  {trans.type === 'income' ? '+' : '-'} {trans.amount}
+                  {trans.type === 'income' ? '+' : '-'} {formatCurrency(trans.amount).split(' ')[0]}
                 </p>
               </motion.div>
             ))
@@ -235,4 +268,5 @@ export const Dashboard = ({ lang, name, stats, debtStats, transactions, onTabCha
     </div>
   );
 };
+
 

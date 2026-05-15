@@ -18,6 +18,7 @@ interface DebtPageProps {
 export const DebtPage = ({ lang, debts, onDelete, onEdit, onAdd, onRepay }: DebtPageProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'unpaid' | 'partially_paid' | 'paid'>('all');
+  const [debtTypeFilter, setDebtTypeFilter] = useState<'owe' | 'to_me'>('owe');
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const t = translations[lang];
@@ -28,11 +29,12 @@ export const DebtPage = ({ lang, debts, onDelete, onEdit, onAdd, onRepay }: Debt
         const matchesSearch = 
           debt.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
           (debt.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = filter === 'all' || debt.status === filter;
-        return matchesSearch && matchesFilter;
+        const matchesStatus = filter === 'all' || debt.status === filter;
+        const matchesType = debt.type === debtTypeFilter;
+        return matchesSearch && matchesStatus && matchesType;
       })
       .sort((a, b) => b.createdAt - a.createdAt);
-  }, [debts, searchTerm, filter]);
+  }, [debts, searchTerm, filter, debtTypeFilter]);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -46,7 +48,35 @@ export const DebtPage = ({ lang, debts, onDelete, onEdit, onAdd, onRepay }: Debt
         </button>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Main Type Tabs */}
+      <div className="bento-card p-1.5 flex gap-1.5">
+        <button
+          onClick={() => setDebtTypeFilter('owe')}
+          className={cn(
+            "flex-1 py-3 rounded-2xl text-[12px] font-bold transition-all flex items-center justify-center gap-2",
+            debtTypeFilter === 'owe' 
+              ? "bg-red-500 text-white shadow-sm" 
+              : "text-gray-400 hover:bg-gray-50"
+          )}
+        >
+          <span className="w-2 h-2 rounded-full bg-white opacity-50" />
+          {t.debtOwe}
+        </button>
+        <button
+          onClick={() => setDebtTypeFilter('to_me')}
+          className={cn(
+            "flex-1 py-3 rounded-2xl text-[12px] font-bold transition-all flex items-center justify-center gap-2",
+            debtTypeFilter === 'to_me' 
+              ? "bg-emerald-500 text-white shadow-sm" 
+              : "text-gray-400 hover:bg-gray-50"
+          )}
+        >
+          <span className="w-2 h-2 rounded-full bg-white opacity-50" />
+          {t.debtToMe}
+        </button>
+      </div>
+
+      {/* Status Filter Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
         {[
           { id: 'all', label: t.all },
@@ -106,18 +136,21 @@ export const DebtPage = ({ lang, debts, onDelete, onEdit, onAdd, onRepay }: Debt
                   <div className="flex items-center gap-3">
                     <div className={cn(
                         "w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-sm border border-gray-50",
-                        debt.status === 'paid' ? "bg-primary/10 text-primary" : "bg-red-50 text-red-500"
+                        debt.status === 'paid' ? "bg-primary/10 text-primary" : (debt.type === 'owe' ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-500")
                     )}>
-                      {debt.status === 'paid' ? <CheckCircle size={20} /> : <Clock size={20} />}
+                      {debt.type === 'owe' ? '💸' : '💰'}
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-premium-black">{debt.name}</h4>
-                      <p className="text-[10px] text-gray-400 font-medium">{debt.date}</p>
+                      <p className="text-[10px] text-gray-400 font-medium">{debt.date} · {debt.type === 'owe' ? t.debtOwe : t.debtToMe}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{t.remaining}</p>
-                    <p className="text-sm font-bold text-red-500">{formatCurrency(debt.remainingAmount)}</p>
+                    <p className={cn(
+                      "text-sm font-bold",
+                      debt.type === 'owe' ? "text-red-500" : "text-emerald-500"
+                    )}>{formatCurrency(debt.remainingAmount)}</p>
                   </div>
                 </div>
 
@@ -129,15 +162,18 @@ export const DebtPage = ({ lang, debts, onDelete, onEdit, onAdd, onRepay }: Debt
 
                 {/* Progress Bar */}
                 <div className="space-y-1.5 mb-4">
-                  <div className="flex justify-between text-[9px] font-bold text-gray-400">
+                  <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase">
                     <span>{t.paid}: {formatCurrency(debt.paidAmount)}</span>
-                    <span>{t.totalDebts}: {formatCurrency(debt.totalAmount)}</span>
+                    <span>{t.debtAmount}: {formatCurrency(debt.totalAmount)}</span>
                   </div>
                   <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${(debt.paidAmount / debt.totalAmount) * 100}%` }}
-                      className="h-full bg-primary"
+                      className={cn(
+                        "h-full",
+                        debt.type === 'owe' ? "bg-red-500" : "bg-emerald-500"
+                      )}
                     />
                   </div>
                 </div>

@@ -1,16 +1,16 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Filter, Trash2, ArrowUpRight, ArrowDownLeft, X, ArrowUpDown, Pencil } from 'lucide-react';
-import { Transaction } from '../types';
+import { Transaction, UnifiedItem } from '../types';
 import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../constants';
 import { cn, formatCurrency } from '../lib/utils';
 import { translations, Language } from '../translations';
 
 interface HistoryPageProps {
   lang: Language;
-  transactions: Transaction[];
-  onDelete: (id: string) => void;
-  onEdit: (transaction: Transaction) => void;
+  transactions: UnifiedItem[];
+  onDelete: (id: string, unifiedType: string) => void;
+  onEdit: (id: string, unifiedType: string) => void;
 }
 
 export const HistoryPage = ({ lang, transactions, onDelete, onEdit }: HistoryPageProps) => {
@@ -23,32 +23,51 @@ export const HistoryPage = ({ lang, transactions, onDelete, onEdit }: HistoryPag
   const filteredTransactions = useMemo(() => {
     return transactions
       .filter((trans) => {
-        const categoryLabel = (trans.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES)
-          .find(c => c.id === trans.category)?.label || '';
+        let categoryLabel = '';
+        if (trans.unifiedType === 'debt') {
+          categoryLabel = trans.description || '';
+        } else {
+          categoryLabel = (trans.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES)
+            .find(c => c.id === trans.category)?.label || '';
+        }
+        
         const matchesSearch = categoryLabel.includes(searchTerm) || (trans.description || '').includes(searchTerm);
-        const matchesFilter = filter === 'all' || trans.type === filter;
+        
+        let matchesFilter = false;
+        if (filter === 'all') matchesFilter = true;
+        else if (filter === 'income') matchesFilter = trans.type === 'income' && trans.unifiedType === 'transaction';
+        else if (filter === 'expense') matchesFilter = trans.type === 'expense' && trans.unifiedType === 'transaction';
+
         return matchesSearch && matchesFilter;
       })
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort((a, b) => b.createdAt - a.createdAt);
   }, [transactions, searchTerm, filter]);
 
+  const filterOptions = [
+    { id: 'all', label: t.all, color: 'bg-primary' },
+    { id: 'income', label: t.incomeLabel, color: 'bg-emerald-500' },
+    { id: 'expense', label: t.expenseLabel, color: 'bg-red-500' }
+  ];
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+      <div className="flex flex-col gap-4">
         <h1 className="text-[24px] font-bold tracking-tight text-premium-black uppercase">{t.historyTitle}</h1>
-        <div className="bg-white p-1 rounded-2xl shadow-sm flex items-center gap-1 border border-gray-100">
-           <button 
-             onClick={() => setFilter('all')}
-             className={cn("px-4 py-1.5 rounded-xl text-[11px] font-bold transition-all uppercase tracking-wider", filter === 'all' ? "bg-primary text-white" : "text-gray-400")}
-           >{t.all}</button>
-           <button 
-             onClick={() => setFilter('income')}
-             className={cn("px-4 py-1.5 rounded-xl text-[11px] font-bold transition-all uppercase tracking-wider", filter === 'income' ? "bg-primary text-white" : "text-gray-400")}
-           >{t.incomeLabel}</button>
-           <button 
-             onClick={() => setFilter('expense')}
-             className={cn("px-4 py-1.5 rounded-xl text-[11px] font-bold transition-all uppercase tracking-wider", filter === 'expense' ? "bg-primary text-white" : "text-gray-400")}
-           >{t.expenseLabel}</button>
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
+          {filterOptions.map((opt) => (
+            <button 
+              key={opt.id}
+              onClick={() => setFilter(opt.id as any)}
+              className={cn(
+                "px-4 py-2 rounded-2xl text-[11px] font-bold transition-all uppercase tracking-wider whitespace-nowrap flex items-center gap-2 border",
+                filter === opt.id 
+                  ? `${opt.color} text-white border-transparent shadow-sm` 
+                  : "bg-white text-gray-400 border-gray-100"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -89,22 +108,21 @@ export const HistoryPage = ({ lang, transactions, onDelete, onEdit }: HistoryPag
                     "w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-sm border border-gray-50",
                     trans.type === 'income' ? "bg-primary/10 text-primary" : "bg-red-50 text-red-500"
                   )}>
-                    {trans.type === 'income' ? '💰' : '🛒'}
+                    {trans.unifiedType === 'debt' ? '🧾' : (trans.type === 'income' ? '💰' : '💸')}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                        <h4 className="font-bold text-[14px] text-premium-black">
-                        {trans.type === 'income' 
-                          ? (INCOME_CATEGORIES.find(c => c.id === trans.category)?.label || trans.category)
-                          : (EXPENSE_CATEGORIES.find(c => c.id === trans.category)?.label || trans.category)}
+                        {trans.unifiedType === 'debt' 
+                          ? trans.description
+                          : (trans.type === 'income' 
+                              ? (INCOME_CATEGORIES.find(c => c.id === trans.category)?.label || trans.category)
+                              : (EXPENSE_CATEGORIES.find(c => c.id === trans.category)?.label || trans.category))}
                       </h4>
-                      {trans.description && (
-                        <span className="text-[9px] bg-neutral-bg px-2 py-0.5 rounded-full text-gray-400 font-bold truncate max-w-[70px]">
-                          {trans.description}
-                        </span>
-                      )}
                     </div>
-                    <p className="text-gray-400 text-[10px] font-medium leading-none">{trans.date}</p>
+                    <p className="text-gray-400 text-[10px] font-medium leading-none">
+                      {trans.date} {trans.unifiedType === 'debt' && <span className="opacity-50">· {trans.debtType === 'owe' ? t.debtOwe : t.debtToMe}</span>}
+                    </p>
                   </div>
                 </div>
                 
@@ -114,13 +132,13 @@ export const HistoryPage = ({ lang, transactions, onDelete, onEdit }: HistoryPag
                       "font-bold text-[16px] tracking-tight",
                       trans.type === 'income' ? "text-primary" : "text-red-500"
                     )}>
-                      {trans.type === 'income' ? '+' : '-'} {trans.amount}
+                      {trans.type === 'income' ? '+' : '-'} {formatCurrency(trans.amount).split(' ')[0]}
                     </p>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <button 
-                      onClick={() => onEdit(trans)}
+                      onClick={() => onEdit(trans.id, trans.unifiedType)}
                       className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity active:scale-90"
                     >
                       <Pencil size={18} />
@@ -153,7 +171,7 @@ export const HistoryPage = ({ lang, transactions, onDelete, onEdit }: HistoryPag
                         </button>
                         <button 
                           onClick={() => {
-                            onDelete(trans.id);
+                            onDelete(trans.id, trans.unifiedType);
                             setIsDeleting(null);
                           }}
                           className="bg-white p-2 rounded-xl text-red-500 hover:bg-white/90 transition-colors"

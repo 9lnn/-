@@ -7,7 +7,7 @@ import { HistoryPage } from './pages/HistoryPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { DebtPage } from './pages/DebtPage';
 import { DebtForm } from './pages/DebtForm';
-import { Transaction, WalletStats, Debt, DebtStats } from './types';
+import { Transaction, WalletStats, Debt, DebtStats, UnifiedItem } from './types';
 import { storage } from './lib/storage';
 
 export default function App() {
@@ -22,14 +22,33 @@ export default function App() {
     balance: 0,
     totalIncome: 0,
     totalExpense: 0,
-    totalDebt: 0,
+    totalDebtOwe: 0,
+    totalDebtToMe: 0,
     transactionCount: 0,
   });
   const [debtStats, setDebtStats] = useState<DebtStats>({
-    total: 0,
-    paid: 0,
-    remaining: 0
+    owe: { total: 0, paid: 0, remaining: 0 },
+    toMe: { total: 0, paid: 0, remaining: 0 }
   });
+
+  const getRecentUnified = (): UnifiedItem[] => {
+    const combined: UnifiedItem[] = [
+      ...transactions.map(t => ({ ...t, unifiedType: 'transaction' as const })),
+      ...debts.map(d => ({ 
+        id: d.id, 
+        amount: d.totalAmount, 
+        type: (d.type === 'owe' ? 'expense' : 'income') as any, 
+        category: 'debt', 
+        description: d.name, 
+        date: d.date, 
+        createdAt: d.createdAt,
+        unifiedType: 'debt' as const,
+        debtType: d.type,
+        debtStatus: d.status
+      }))
+    ];
+    return combined.sort((a, b) => b.createdAt - a.createdAt);
+  };
 
   const handleLanguageChange = (newLang: 'ar' | 'en') => {
     storage.saveLanguage(newLang);
@@ -136,11 +155,6 @@ export default function App() {
     setActiveTab('debts');
   };
 
-  const handleDeleteTransaction = (id: string) => {
-    storage.deleteTransaction(id);
-    refreshData();
-  };
-
   const handleEditTransaction = (transaction: Transaction) => {
     setEditingTransaction(transaction);
     setActiveTab('edit-transaction');
@@ -164,10 +178,29 @@ export default function App() {
     }
   };
 
+  const handleDeleteUnified = (id: string, unifiedType: string) => {
+    if (unifiedType === 'debt') {
+      storage.deleteDebt(id);
+    } else {
+      storage.deleteTransaction(id);
+    }
+    refreshData();
+  };
+
+  const handleEditUnified = (id: string, unifiedType: string) => {
+    if (unifiedType === 'debt') {
+      const debt = debts.find(d => d.id === id);
+      if (debt) handleEditDebt(debt);
+    } else {
+      const transaction = transactions.find(t => t.id === id);
+      if (transaction) handleEditTransaction(transaction);
+    }
+  };
+
   const renderPage = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard lang={lang} name={userName} stats={stats} debtStats={debtStats} transactions={transactions.slice(0, 5)} onTabChange={setActiveTab} />;
+        return <Dashboard lang={lang} name={userName} stats={stats} debtStats={debtStats} transactions={getRecentUnified().slice(0, 5)} onTabChange={setActiveTab} />;
       case 'add-income':
         return <TransactionForm lang={lang} type="income" onSubmit={handleAddTransaction} onBack={() => setActiveTab('dashboard')} />;
       case 'add-expense':
@@ -186,7 +219,7 @@ export default function App() {
           />
         ) : null;
       case 'history':
-        return <HistoryPage lang={lang} transactions={transactions} onDelete={handleDeleteTransaction} onEdit={handleEditTransaction} />;
+        return <HistoryPage lang={lang} transactions={getRecentUnified()} onDelete={handleDeleteUnified} onEdit={handleEditUnified} />;
       case 'debts':
         return <DebtPage lang={lang} debts={debts} onDelete={handleDeleteDebt} onEdit={handleEditDebt} onAdd={() => setActiveTab('add-debt')} onRepay={handleRepayDebt} />;
       case 'add-debt':
